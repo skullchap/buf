@@ -11,10 +11,12 @@ void*	bufcursor(Buf*);
 void*	bufoff(Buf*, long off);
 Buf*	copybuf(Buf*);
 int	appendbuf(Buf*, void*, long);
-int	insertbuf(Buf*, long idx, void*, long);
+int	insertbuf(Buf*, long off, void*, long);
 Buf*	slicebuf(Buf*, long from, long till);
 int	fillbuf(Buf*, int c, long from, long till);
 
 Functions return either NULL or negative number on error.
 appendbuf and insertbuf can set errno to ERANGE on long add overflow condition.
 slicebuf and fillbuf can set errno to ERANGE on from >= till condition.
+
+example/veci.c contains how type vector wrappers could be made.
