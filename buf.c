@@ -117,7 +117,7 @@ appendbuf(Buf *b, void *p, long n)
 }
 
 int
-insertbuf(Buf *b, long idx, void *p, long n)
+insertbuf(Buf *b, long off, void *p, long n)
 {
 	long r;
 
@@ -129,8 +129,8 @@ insertbuf(Buf *b, long idx, void *p, long n)
 	}
 	if (r < 0)
 		return -1;
-	memmove(b->mem + idx + n, b->mem + idx, b->len - idx);
-	memcpy(b->mem + idx, p, n);
+	memmove(b->mem + off + n, b->mem + off, b->len - off);
+	memcpy(b->mem + off, p, n);
 	b->len += n;
 	return 0;
 }

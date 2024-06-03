@@ -17,7 +17,7 @@ void*	bufcursor(Buf*);			/* ptr to place where new mem will be appended */
 void*	bufoff(Buf*, long off);			/* offset in memory */
 Buf*	copybuf(Buf*);
 int	appendbuf(Buf*, void*, long);
-int	insertbuf(Buf*, long idx, void*, long);
+int	insertbuf(Buf*, long off, void*, long);		/* insert mem at given offset */
 Buf*	slicebuf(Buf*, long from, long till);		/* slicebuf(b, 1, 4) on "Hello" returns "ell". negative ranges clamp to 0 and buflen */
 int	fillbuf(Buf*, int c, long from, long till);	/* memset */
 
