@@ -9,7 +9,7 @@ buftest(void)
 {
 	Buf *b, *cb, *insb, *sb;	/* buf, copybuf, insertbuf, slicebuf */
 	void *p; long n;
-	int r;
+	int r, i;
 	char s[] = "sneed and seed";
 	char ins[] = "feed ";
 
@@ -70,8 +70,20 @@ buftest(void)
 	assert(r == 0);
 	assert(bufcap(sb) == 4*2);
 	assert(buflen(sb) == 5);
-	printf("[15:-1]: |%s|\n", (char*)bufmem(sb));
+	printf("[15:19]: |%s|\n", (char*)bufmem(sb));
 	freebuf(sb);
+	freebuf(b);
+
+	b = newbuf(1024);
+	assert(b);
+	setbuflen(b, 512);
+	assert(buflen(b) == 512);
+	r = fillbuf(b, 42, 0, -1);
+	assert(r == 0);
+	for(i = 0; i < buflen(b); ++i){
+		char c = *(char*)bufoff(b, i);
+		assert(c == 42);
+	}
 	freebuf(b);
 
 	puts("buftest Success.");

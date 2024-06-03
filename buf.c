@@ -18,6 +18,7 @@ extern void*	realloc(void *p, ulong n);
 extern void	free(void *p);
 extern void*	memcpy(void *dst, const void *src, ulong n);
 extern void*	memmove(void *dst, const void *src, ulong n);
+extern void*	memset(void *s, int c, ulong n);
 
 static long	bufneedsgrow(Buf*, long n);
 
@@ -78,6 +79,12 @@ bufcursor(Buf *b)
 	return b->mem + b->len;
 }
 
+void*
+bufoff(Buf *b, long off)
+{
+	return b->mem + off;
+}
+
 Buf*
 copybuf(Buf *b)
 {
@@ -88,7 +95,6 @@ copybuf(Buf *b)
 		return NULL;
 	memcpy(nb->mem, b->mem, b->len);
 	nb->len = b->len;
-	nb->cap = b->cap;
 	return nb;
 }
 
@@ -154,6 +160,26 @@ slicebuf(Buf *b, long from, long till)
 	return sb;
 }
 
+int 
+fillbuf(Buf *b, int c, long from, long till)
+{
+	long n;
+
+	if (from < 0)
+		from = 0;
+	if(till < 0 || till > b->len)
+		till = b->len;
+
+	if (from >= till) {
+		errno = ERANGE;
+		return -1;
+	}
+
+	n = till - from;
+	memset(b->mem + from, c, n);
+	return 0;
+}
+
 int
 setbufcap(Buf *b, long cap)
 {
@@ -165,6 +191,12 @@ setbufcap(Buf *b, long cap)
 	b->mem = p;
 	b->cap = cap;
 	return 0;
+}
+
+void
+setbuflen(Buf *b, long len)
+{
+	b->len = len;
 }
 
 static
