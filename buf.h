@@ -18,7 +18,7 @@ void*	bufoff(Buf*, long off);			/* offset in memory */
 Buf*	copybuf(Buf*);
 int	appendbuf(Buf*, void*, long);
 int	insertbuf(Buf*, long off, void*, long);		/* insert mem at given offset */
-Buf*	slicebuf(Buf*, long from, long till);		/* slicebuf(b, 1, 4) on "Hello" returns "ell". negative ranges clamp to 0 and buflen */
+Buf*	slicebuf(Buf*, long from, long till);		/* slicebuf(b, 1, 4) on "Hello" returns "ell" copy. negative ranges clamp to 0 and buflen */
 int	cutbuf(Buf *b, long from, long till);		/* same semantics as slicebuf, except it cuts then welds provided range of buf */
 int	fillbuf(Buf*, int c, long from, long till);	/* memset */
 
