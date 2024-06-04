@@ -160,7 +160,28 @@ slicebuf(Buf *b, long from, long till)
 	return sb;
 }
 
-int 
+int
+cutbuf(Buf *b, long from, long till)
+{
+	long n;
+
+	if (from < 0)
+		from = 0;
+	if(till < 0 || till > b->len)
+		till = b->len;
+
+	if (from >= till) {
+		errno = ERANGE;
+		return -1;
+	}
+
+	n = till - from;
+	memmove(b->mem + from, b->mem + till, n);
+	b->len -= n;
+	return 0;
+}
+
+int
 fillbuf(Buf *b, int c, long from, long till)
 {
 	long n;

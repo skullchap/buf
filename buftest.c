@@ -70,8 +70,19 @@ buftest(void)
 	assert(r == 0);
 	assert(bufcap(sb) == 4*2);
 	assert(buflen(sb) == 5);
-	printf("[15:19]: |%s|\n", (char*)bufmem(sb));
+	printf("slice [15:19]: |%s|\n", (char*)bufmem(sb));
+
+	r = cutbuf(sb, 1, 3);
+	assert(r == 0);
+	assert(bufcap(sb) == 4*2);
+	assert(buflen(sb) == 3);
+	printf("after [1:3] cut on slice: |%s|\n", (char*)bufmem(sb));
 	freebuf(sb);
+
+	r = cutbuf(b, 5, buflen(b)-1); /* '\0' */
+	assert(r == 0);
+	assert(buflen(b) == 6);
+	printf("after [5:-1] cut on original: |%s|\n", (char*)bufmem(b));
 	freebuf(b);
 
 	b = newbuf(1024);

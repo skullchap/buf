@@ -13,6 +13,7 @@ Buf*	copybuf(Buf*);
 int	appendbuf(Buf*, void*, long);
 int	insertbuf(Buf*, long off, void*, long);
 Buf*	slicebuf(Buf*, long from, long till);
+int	cutbuf(Buf *b, long from, long till);
 int	fillbuf(Buf*, int c, long from, long till);
 
 Functions return either NULL or negative number on error.
