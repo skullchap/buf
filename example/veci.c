@@ -56,7 +56,7 @@ popveci(Veci *v)                /* pop last element */
 	r = fillbuf(v, 0, buflen(v)-1-sizeof(int), buflen(v));
 	if(r < 0)
 		return r;
-	setbuflen(v, buflen(v)-sizeof(4));
+	setbuflen(v, buflen(v)-sizeof(int));
 	return 0;
 }
 
@@ -69,8 +69,28 @@ insveci(Veci *v, long idx, int val)     /* insert at given idx */
 	return insertbuf(v, off, &val, sizeof(int));
 }
 
+Veci*
+sliceveci(Veci *v, long from, long till)     /* slice from idx till idx */
+{
+	long foff, toff;
+
+	foff = from * sizeof(int);
+	toff = till * sizeof(int);
+	return slicebuf(v, foff, toff);
+}
+
+int
+cutveci(Veci *v, long from, long till)     /* slice from idx till idx */
+{
+	long foff, toff;
+
+	foff = from * sizeof(int);
+	toff = till * sizeof(int);
+	return cutbuf(v, foff, toff);
+}
+
 void
-freeveci(Veci* v)
+freeveci(Veci *v)
 {
 	freebuf(v);
 }
@@ -91,7 +111,7 @@ printveci(Veci *v)
 int
 main(void)
 {
-	Veci *v;
+	Veci *v, *sv;
 
 	v = newveci(6);
 	assert(v);
@@ -138,6 +158,21 @@ main(void)
 	printveci(v);
 	printf("v nelem: %d\n", nveci(v));
 	printf("v elem cap: %d\n", vecicap(v));
-	
+	puts("");
+
+	sv = sliceveci(v, 1, 4);
+	printf("new sliced sv veci 1-4: ");
+	printveci(sv);
+	printf("sv nelem: %d\n", nveci(sv));
+	printf("sv elem cap: %d\n", vecicap(sv));
+	freeveci(sv);
+	puts("");
+
+	cutveci(v, 1, 4);
+	printf("veci elems after 1-4 cut: ");
+	printveci(v);
+	printf("sv nelem: %d\n", nveci(v));
+	printf("sv elem cap: %d\n", vecicap(v));
+
 	freeveci(v);
 }
