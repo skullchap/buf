@@ -1,24 +1,27 @@
 ANSI C89 compatible, dynamic buffer lib.
 
-Buf*	newbuf(long cap);
+Buf*	newbuf(ulong cap);
 void	freebuf(Buf*);
-long	buflen(Buf*);
-void	setbuflen(Buf*, long len);
-long	bufcap(Buf*);
-int	setbufcap(Buf*, long cap);
+ulong	buflen(Buf*);
+ulong	bufcap(Buf*);
+void	setbuflen(Buf*, ulong len);
+void	setbufcap(Buf*, ulong cap);
 void*	bufmem(Buf*);
 void*	bufcursor(Buf*);
-void*	bufoff(Buf*, long off);
+void*	bufoff(Buf*, ulong off);
 Buf*	copybuf(Buf*);
-int	appendbuf(Buf*, void*, long);
-int	insertbuf(Buf*, long off, void*, long);
-Buf*	slicebuf(Buf*, long from, long till);
-int	cutbuf(Buf *b, long from, long till);
-int	fillbuf(Buf*, int c, long from, long till);
+Buf*	copybufn(Buf *b, ulong from, ulong till);
+void	appendbuf(Buf*, void*, ulong);
+void	insertbuf(Buf*, ulong off, void*, ulong);
+void	cutbuf(Buf *b, ulong from, ulong till);
+void	fillbuf(Buf*, int c, ulong from, ulong till);
+void	setbufalloc(AllocFunc afn);
+void	setbufdealloc(DeallocFunc dfn);
+void	setbufrealloc(ReallocFunc rfn);
 
-Functions return either NULL or negative number on error.
-appendbuf and insertbuf can set errno to ERANGE on long add overflow condition.
-slicebuf, cutbuf and fillbuf can set errno to ERANGE on from >= till condition.
+Most functions assumed to be error proof by default, they don't check for NULL from malloc, realloc.
+This means that by default they expect alloc/realloc to never fail.
+To have some sort of check for NULL, provide own alloc/realloc functions, that have a check for it.
 
 example/veci.c contains how type vector wrappers could be made.
 

@@ -21,13 +21,13 @@ main(void)
         pusharrvecd(vd, arr, nelem(arr));
         fprintvecd(stdout, "%.2f", vd);
         puts("");
-        printf("n: %d, ncap: %d\n", nvecd(vd), vecdcap(vd));
+        printf("n: %lu, ncap: %lu\n", nvecd(vd), vecdcap(vd));
 
         cutvecd(vd, 1, 5);
         printf("vecd after 1-5 cut: ");
         fprintvecd(stdout, "%.2f", vd);
         puts("");
-        printf("n: %d, ncap: %d\n", nvecd(vd), vecdcap(vd));
+        printf("n: %lu, ncap: %lu\n", nvecd(vd), vecdcap(vd));
 
         freevecd(vd);
 }

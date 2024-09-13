@@ -8,21 +8,21 @@
 \
 typedef Buf Vec##alias; \
 \
-Vec##alias * newvec##alias(long nelem); \
-type*	vec##alias##p(Vec##alias *v, long idx); \
-type	vec##alias(Vec##alias *v, long idx); \
-long	nvec##alias(Vec##alias *v); \
-long	vec##alias##cap(Vec##alias *v); \
+Vec##alias * newvec##alias(ulong nelem); \
+type*	vec##alias##p(Vec##alias *v, ulong idx); \
+type	vec##alias(Vec##alias *v, ulong idx); \
+ulong	nvec##alias(Vec##alias *v); \
+ulong	vec##alias##cap(Vec##alias *v); \
 Vec##alias * copyvec##alias(Vec##alias *v); \
-int	pushvec##alias(Vec##alias *v, type val); \
-int	pushpvec##alias(Vec##alias *v, type *p); \
-int	pusharrvec##alias(Vec##alias *v, type arr[], long n); \
-int	popvec##alias(Vec##alias *v); \
-int	insvec##alias(Vec##alias *v, long idx, type val); \
-int	inspvec##alias(Vec##alias *v, long idx, type *p); \
-int	insarrvec##alias(Vec##alias *v, long idx, type arr[], long n); \
-Vec##alias * slicevec##alias(Vec##alias *v, long from, long till); \
-int	cutvec##alias(Vec##alias *v, long from, long till); \
+Vec##alias * copyvecn##alias(Vec##alias *v, ulong from, ulong till); \
+void	pushvec##alias(Vec##alias *v, type val); \
+void	pushpvec##alias(Vec##alias *v, type *p); \
+void	pusharrvec##alias(Vec##alias *v, type arr[], ulong n); \
+void	popvec##alias(Vec##alias *v); \
+void	insvec##alias(Vec##alias *v, ulong idx, type val); \
+void	inspvec##alias(Vec##alias *v, ulong idx, type *p); \
+void	insarrvec##alias(Vec##alias *v, ulong idx, type arr[], ulong n); \
+void	cutvec##alias(Vec##alias *v, ulong from, ulong till); \
 void	freevec##alias(Vec##alias *v); \
 void	fprintvec##alias(FILE *f, char *fmt, Vec##alias *v);
 
@@ -31,34 +31,32 @@ void	fprintvec##alias(FILE *f, char *fmt, Vec##alias *v);
 typedef Buf Vec##alias; \
 \
 Vec##alias * \
-newvec##alias(long nelem) \
+newvec##alias(ulong nelem) \
 { \
-	long cap; \
-	cap = nelem * sizeof(type); \
+	ulong cap = nelem * sizeof(type); \
 	return newbuf(cap); \
 } \
 \
 type* \
-vec##alias##p(Vec##alias *v, long idx) \
+vec##alias##p(Vec##alias *v, ulong idx) \
 { \
-      	long off; \
-	off = idx * sizeof(type); \
+      	ulong off = idx * sizeof(type); \
 	return bufoff(v, off); \
 } \
 \
 type \
-vec##alias(Vec##alias *v, long idx) \
+vec##alias(Vec##alias *v, ulong idx) \
 { \
 	return *(type*)vec##alias##p(v, idx); \
 } \
 \
-long \
+ulong \
 nvec##alias(Vec##alias *v) \
 { \
 	return buflen(v) / sizeof(type); \
 } \
 \
-long \
+ulong \
 vec##alias##cap(Vec##alias *v) \
 { \
 	return bufcap(v) / sizeof(type); \
@@ -70,75 +68,67 @@ copyvec##alias(Vec##alias *v) \
 	return copybuf(v); \
 } \
 \
-int \
+Vec##alias * \
+copyvecn##alias(Vec##alias *v, ulong from, ulong till) \
+{ \
+	ulong foff = from * sizeof(type); \
+	ulong toff = till * sizeof(type); \
+	return copybufn(v, foff, toff); \
+} \
+\
+void \
 pushvec##alias(Vec##alias *v, type val) \
 { \
-	return appendbuf(v, &val, sizeof(type)); \
+	appendbuf(v, &val, sizeof(type)); \
 } \
 \
-int \
+void \
 pushpvec##alias(Vec##alias *v, type *p) \
 { \
-	return appendbuf(v, p, sizeof(type)); \
+	appendbuf(v, p, sizeof(type)); \
 } \
 \
-int \
-pusharrvec##alias(Vec##alias *v, type arr[], long n) \
+void \
+pusharrvec##alias(Vec##alias *v, type arr[], ulong n) \
 { \
-	return appendbuf(v, arr, sizeof(type) * n); \
+	appendbuf(v, arr, sizeof(type) * n); \
 } \
 \
-int \
+void \
 popvec##alias(Vec##alias *v) \
 { \
-	int r; \
-	r = fillbuf(v, 0, buflen(v)-1-sizeof(type), buflen(v)); \
-	if(r < 0) \
-		return r; \
+	fillbuf(v, 0, buflen(v)-1-sizeof(type), buflen(v)); \
 	setbuflen(v, buflen(v)-sizeof(type)); \
-	return 0; \
 } \
 \
-int \
-insvec##alias(Vec##alias *v, long idx, type val) \
+void \
+insvec##alias(Vec##alias *v, ulong idx, type val) \
 { \
-	long off; \
-	off = idx * sizeof(type); \
-	return insertbuf(v, off, &val, sizeof(type)); \
+	ulong off = idx * sizeof(type); \
+	insertbuf(v, off, &val, sizeof(type)); \
 } \
 \
-int \
-inspvec##alias(Vec##alias *v, long idx, type *p) \
+void \
+inspvec##alias(Vec##alias *v, ulong idx, type *p) \
 { \
-	long off; \
-	off = idx * sizeof(type); \
-	return insertbuf(v, off, p, sizeof(type)); \
+	ulong off = idx * sizeof(type); \
+	insertbuf(v, off, p, sizeof(type)); \
 } \
 \
-int \
-insarrvec##alias(Vec##alias *v, long idx, type arr[], long n) \
+void \
+insarrvec##alias(Vec##alias *v, ulong idx, type arr[], ulong n) \
 { \
-	long off; \
-	off = idx * sizeof(type); \
-	return insertbuf(v, off, arr, sizeof(type) * n); \
+	ulong off = idx * sizeof(type); \
+	insertbuf(v, off, arr, sizeof(type) * n); \
 } \
 \
-Vec##alias * \
-slicevec##alias(Vec##alias *v, long from, long till) \
-{ \
-	long foff, toff; \
-	foff = from * sizeof(type); \
-	toff = till * sizeof(type); \
-	return slicebuf(v, foff, toff); \
-} \
 \
-int \
-cutvec##alias(Vec##alias *v, long from, long till) \
+void \
+cutvec##alias(Vec##alias *v, ulong from, ulong till) \
 { \
-	long foff, toff; \
-	foff = from * sizeof(type); \
-	toff = till * sizeof(type); \
-	return cutbuf(v, foff, toff); \
+	ulong foff = from * sizeof(type); \
+	ulong toff = till * sizeof(type); \
+	cutbuf(v, foff, toff); \
 } \
 \
 void \

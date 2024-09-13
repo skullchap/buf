@@ -5,11 +5,8 @@
 */
 
 #include "buf.h"
-#include <limits.h>
-#include <errno.h>
 
 typedef unsigned char uchar;
-typedef unsigned long ulong;
 
 #define NULL	((void*)0)
 
@@ -20,29 +17,24 @@ extern void*	memcpy(void *dst, const void *src, ulong n);
 extern void*	memmove(void *dst, const void *src, ulong n);
 extern void*	memset(void *s, int c, ulong n);
 
-static long	bufneedsgrow(Buf*, long n);
+static ulong	bufneedsgrow(Buf*, ulong n);
+
+static AllocFunc   alloc     = malloc;
+static DeallocFunc dealloc   = free;
+static ReallocFunc reallocfn = realloc;
 
 struct Buf
 {
-	long	len;
-	long	cap;
+	ulong	len;
+	ulong	cap;
 	uchar	*mem;
 };
 
 Buf*
-newbuf(long cap)
+newbuf(ulong cap)
 {
-	Buf *b;
-
-	b = malloc(sizeof(Buf));
-	if (b == NULL)
-		return NULL;
-
-	b->mem = malloc(cap);
-	if (b->mem == NULL) {
-		free(b);
-		return NULL;
-	}
+	Buf *b = alloc(sizeof(Buf));
+	b->mem = alloc(cap);
 	b->len = 0;
 	b->cap = cap;
 	return b;
@@ -51,197 +43,116 @@ newbuf(long cap)
 void
 freebuf(Buf *b)
 {
-	free(b->mem);
-	free(b);
+	if(b == NULL)
+		return;
+	dealloc(b->mem);
+	dealloc(b);
 }
 
-long
-buflen(Buf *b)
+ulong	buflen(Buf *b)			{return b->len;}
+ulong	bufcap(Buf *b)			{return b->cap;}
+void*	bufmem(Buf *b)			{return b->mem;}
+void*	bufcursor(Buf *b)		{return b->mem+b->len;}
+void*	bufoff(Buf *b, ulong off)	{return b->mem+off;}
+void	setbuflen(Buf *b, ulong len) 	{b->len = len;}
+void
+setbufcap(Buf *b, ulong cap)
 {
-	return b->len;
+	void *p = reallocfn(b->mem, cap);
+	b->mem = p;
+	b->cap = cap;
 }
-
-long
-bufcap(Buf *b)
-{
-	return b->cap;
-}
-
-void*
-bufmem(Buf *b)
-{
-	return b->mem;
-}
-
-void*
-bufcursor(Buf *b)
-{
-	return b->mem + b->len;
-}
-
-void*
-bufoff(Buf *b, long off)
-{
-	return b->mem + off;
-}
+void	setbufalloc(AllocFunc afn)	{alloc=afn;}
+void	setbufdealloc(DeallocFunc dfn)	{dealloc=dfn;}
+void	setbufrealloc(ReallocFunc rfn)	{reallocfn=rfn;}
 
 Buf*
 copybuf(Buf *b)
 {
-	Buf *nb;
-	
-	nb = newbuf(b->cap);
-	if (nb == NULL)
-		return NULL;
+	Buf *nb = newbuf(b->cap);
 	memcpy(nb->mem, b->mem, b->len);
 	nb->len = b->len;
 	return nb;
 }
 
-int
-appendbuf(Buf *b, void *p, long n)
-{
-	long r;
-
-	r = bufneedsgrow(b, n);
-	if (r > 0) {
-		r = setbufcap(b, r);
-		if (r < 0)
-			return -1;
-	}
-	if (r < 0)
-		return -1;
-	memcpy(bufcursor(b), p, n);
-	b->len += n;
-	return 0;
-}
-
-int
-insertbuf(Buf *b, long off, void *p, long n)
-{
-	long r;
-
-	r = bufneedsgrow(b, n);
-	if (r > 0) {
-		r = setbufcap(b, r);
-		if (r < 0)
-			return -1;
-	}
-	if (r < 0)
-		return -1;
-	memmove(b->mem + off + n, b->mem + off, b->len - off);
-	memcpy(b->mem + off, p, n);
-	b->len += n;
-	return 0;
-}
-
 Buf* 
-slicebuf(Buf *b, long from, long till)
+copybufn(Buf *b, ulong from, ulong till)
 {
-	Buf *sb;
-	long n;
-
-	if (from < 0)
-		from = 0;
-	if(till < 0 || till > b->len)
-		till = b->len;
-
-	if (from >= till) {
-		errno = ERANGE;
-		return NULL;
-	}
-
-	n = till - from;
-	sb = newbuf(n);
-	if (sb == NULL)
-		return NULL;
+	ulong n = till - from;
+	Buf *sb = newbuf(n);
 	memcpy(sb->mem, b->mem + from, n);
 	sb->len = n;
 	return sb;
 }
 
-int
-cutbuf(Buf *b, long from, long till)
+void
+appendbuf(Buf *b, void *p, ulong n)
 {
-	long n;
-
-	if (from < 0)
-		from = 0;
-	if(till < 0 || till > b->len)
-		till = b->len;
-
-	if (from >= till) {
-		errno = ERANGE;
-		return -1;
-	}
-
-	n = till - from;
-	memmove(b->mem + from, b->mem + till, n);
-	b->len -= n;
-	return 0;
-}
-
-int
-fillbuf(Buf *b, int c, long from, long till)
-{
-	long n;
-
-	if (from < 0)
-		from = 0;
-	if(till < 0 || till > b->len)
-		till = b->len;
-
-	if (from >= till) {
-		errno = ERANGE;
-		return -1;
-	}
-
-	n = till - from;
-	memset(b->mem + from, c, n);
-	return 0;
-}
-
-int
-setbufcap(Buf *b, long cap)
-{
-	void *p;
-
-	p = realloc(b->mem, cap);
-	if (p == NULL)
-		return -1;
-	b->mem = p;
-	b->cap = cap;
-	return 0;
+	ulong r = bufneedsgrow(b, n);
+	if (r > 0) 
+		setbufcap(b, r);
+	memcpy(bufcursor(b), p, n);
+	b->len += n;
 }
 
 void
-setbuflen(Buf *b, long len)
+insertbuf(Buf *b, ulong off, void *p, ulong n)
 {
-	b->len = len;
+	ulong r = bufneedsgrow(b, n);
+	if (r > 0) 
+		setbufcap(b, r);
+	memmove(b->mem + off + n, b->mem + off, b->len - off);
+	memcpy(b->mem + off, p, n);
+	b->len += n;
+}
+
+/* fixme: copynbuf used to be slicebuf. new slice impl returns "view" to original buffer, 
+   but this has a potential problem of double free on original buf and sliced one.
+   Potential fix to this could be made by marking Buf as slice internally either by adding 
+   member like isslice inside Buf, or by setting cap to symbolic const like ULONG_MAX or something like that.
+   ¯\_(ツ)_/¯
+*/
+/*
+Buf* 
+slicebuf(Buf *b, ulong from, ulong till)
+{
+	ulong n = till - from;
+	Buf *sb = alloc(sizeof(Buf));
+	sb->mem = b->mem + from;
+	sb->len = n;
+	sb->cap = 0;
+	return sb;
+}
+*/
+
+void
+cutbuf(Buf *b, ulong from, ulong till)
+{
+	ulong n = till - from;
+	memmove(b->mem + from, b->mem + till, n);
+	b->len -= n;
+}
+
+void
+fillbuf(Buf *b, int c, ulong from, ulong till)
+{
+	ulong n = till - from;
+	memset(b->mem + from, c, n);
 }
 
 static
-long
-bufneedsgrow(Buf *b, long n)		/* returns new cap size if buf needs it */
+ulong
+bufneedsgrow(Buf *b, ulong n)		/* returns new cap size if buf needs it */
 {
 	ulong cap, leftover;
 
 	leftover = b->len + n;
-	if (leftover > LONG_MAX) {
-		errno = ERANGE;
-		return -1;
-	}
 	cap = b->cap;
-	while (cap < leftover) {
+	while (cap < leftover)
 		cap *= 2;
-		if (cap > LONG_MAX) {
-			errno = ERANGE;
-			return -1;
-		}
-	}
 
 	if (cap == b->cap)
 		return 0;
 
-	return (long)cap;
+	return cap;
 }

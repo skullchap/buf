@@ -9,91 +9,53 @@ typedef Buf Veci;
 Veci*
 newveci(int nelem)              /* alloc underlying buf for n count of elements */
 {
-	long cap;
-
-	cap = nelem * sizeof(int);
+	ulong cap = nelem * sizeof(int);
 	return newbuf(cap);
 }
 
 int*
 vecip(Veci *v, int idx)          /* return ptr to elem in dynamic array (&int v[idx]) */
 {
-	long off;
-
-	off = idx * sizeof(int);
+	ulong off = idx * sizeof(int);
 	return bufoff(v, off);
 }
 
-int
-veci(Veci *v, int idx)          /* return elem from dynamic array (int v[idx]) */
-{
-	return *(int*)vecip(v, idx);
-}
+int	veci(Veci *v, int idx)		{return *(int*)vecip(v, idx);}		/* return elem from dynamic array (int v[idx]) */
+int	nveci(Veci *v)			{return buflen(v) / sizeof(int);}	/* current n count of elements */
+int	vecicap(Veci *v)		{return bufcap(v) / sizeof(int);}	/* current elem capacity in underlying buf */
+void	pushveci(Veci *v, int val)	{appendbuf(v, &val, sizeof(val));}
 
-int
-nveci(Veci *v)                   /* current n count of elements */
+void
+popveci(Veci *v)	/* pop last element */
 {
-	return buflen(v) / sizeof(int);
-}
-
-int
-vecicap(Veci *v)                /* current elem capacity in underlying buf */
-{
-	return bufcap(v) / sizeof(int);
-}
-
-int
-pushveci(Veci *v, int val)
-{
-	return appendbuf(v, &val, sizeof(val));
-}
-
-int
-popveci(Veci *v)                /* pop last element */
-{
-	int r;
-
-	r = fillbuf(v, 0, buflen(v)-1-sizeof(int), buflen(v));
-	if(r < 0)
-		return r;
+	fillbuf(v, 0, buflen(v)-1-sizeof(int), buflen(v));
 	setbuflen(v, buflen(v)-sizeof(int));
-	return 0;
-}
-
-int
-insveci(Veci *v, long idx, int val)     /* insert at given idx */
-{
-	long off;
-
-	off = idx * sizeof(int);
-	return insertbuf(v, off, &val, sizeof(int));
-}
-
-Veci*
-sliceveci(Veci *v, long from, long till)     /* slice from idx till idx */
-{
-	long foff, toff;
-
-	foff = from * sizeof(int);
-	toff = till * sizeof(int);
-	return slicebuf(v, foff, toff);
-}
-
-int
-cutveci(Veci *v, long from, long till)     /* slice from idx till idx */
-{
-	long foff, toff;
-
-	foff = from * sizeof(int);
-	toff = till * sizeof(int);
-	return cutbuf(v, foff, toff);
 }
 
 void
-freeveci(Veci *v)
+insveci(Veci *v, ulong idx, int val)	/* insert at given idx */
 {
-	freebuf(v);
+	ulong off = idx * sizeof(int);
+	insertbuf(v, off, &val, sizeof(int));
 }
+
+Veci*
+copynveci(Veci *v, ulong from, ulong till)	/* copy from idx till idx */
+{
+	ulong foff = from * sizeof(int);
+	ulong toff = till * sizeof(int);
+	return copybufn(v, foff, toff);
+}
+
+void
+cutveci(Veci *v, ulong from, ulong till)	/* cut from idx till idx */
+{
+	ulong foff = from * sizeof(int);
+	ulong toff = till * sizeof(int);
+	cutbuf(v, foff, toff);
+}
+
+void	freeveci(Veci *v)	{freebuf(v);}
 
 void
 printveci(Veci *v)
@@ -160,8 +122,8 @@ main(void)
 	printf("v elem cap: %d\n", vecicap(v));
 	puts("");
 
-	sv = sliceveci(v, 1, 4);
-	printf("new sliced sv veci 1-4: ");
+	sv = copynveci(v, 1, 4);
+	printf("new copied range sv veci 1-4: ");
 	printveci(sv);
 	printf("sv nelem: %d\n", nveci(sv));
 	printf("sv elem cap: %d\n", vecicap(sv));

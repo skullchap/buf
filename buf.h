@@ -4,26 +4,37 @@
 	License:	Non-Commercial	(full text in LICENSE file)
 */
 
-typedef struct Buf Buf;
+typedef struct Buf 	Buf;
+typedef unsigned long 	ulong;
+typedef void* 		(*AllocFunc)(ulong);
+typedef void  		(*DeallocFunc)(void*);
+typedef void* 		(*ReallocFunc)(void*, ulong);
 
-Buf*	newbuf(long cap);
+Buf*	newbuf(ulong cap);
 void	freebuf(Buf*);
-long	buflen(Buf*);				/* length of content */
-void	setbuflen(Buf*, long len);
-long	bufcap(Buf*);				/* capacity */
-int	setbufcap(Buf*, long cap);		/* increase/decrease capacity. setbufcap(b, buflen(b)) can be used to shrink */
-void*	bufmem(Buf*);				/* ptr to start of allocated mem */
-void*	bufcursor(Buf*);			/* ptr to place where new mem will be appended */
-void*	bufoff(Buf*, long off);			/* offset in memory */
+ulong	buflen(Buf*);					/* length of content */
+ulong	bufcap(Buf*);					/* capacity */
+void	setbuflen(Buf*, ulong len);
+void	setbufcap(Buf*, ulong cap);			/* increase/decrease capacity. setbufcap(b, buflen(b)) can be used to shrink */
+void*	bufmem(Buf*);					/* ptr to start of allocated mem */
+void*	bufcursor(Buf*);				/* ptr to place where new mem will be appended */
+void*	bufoff(Buf*, ulong off);			/* offset in memory */
 Buf*	copybuf(Buf*);
-int	appendbuf(Buf*, void*, long);
-int	insertbuf(Buf*, long off, void*, long);		/* insert mem at given offset */
-Buf*	slicebuf(Buf*, long from, long till);		/* slicebuf(b, 1, 4) on "Hello" returns "ell" copy. negative ranges clamp to 0 and buflen */
-int	cutbuf(Buf *b, long from, long till);		/* same semantics as slicebuf, except it cuts then welds provided range of buf */
-int	fillbuf(Buf*, int c, long from, long till);	/* memset */
+Buf*	copybufn(Buf *b, ulong from, ulong till);	/* copy range */
+void	appendbuf(Buf*, void*, ulong);
+void	insertbuf(Buf*, ulong off, void*, ulong);	/* insert mem at given offset */
+void	cutbuf(Buf *b, ulong from, ulong till);		/* cuts then welds provided range of buf */
+void	fillbuf(Buf*, int c, ulong from, ulong till);	/* memset */
+void	setbufalloc(AllocFunc);				/* replace malloc */
+void	setbufdealloc(DeallocFunc);			/* replace realloc */
+void	setbufrealloc(ReallocFunc); 			/* replace free */
+/* Buf*	slicebuf(Buf*, ulong from, ulong till);		read fixme in c file */
 
 /*
-	Functions return either NULL or negative number on error.
-	appendbuf and insertbuf can set errno to ERANGE on long add overflow condition.
-	slicebuf and fillbuf can set errno to ERANGE on from >= till condition.
+	Most functions assumed to be error proof by default, they don't check for NULL from malloc, realloc.
+	This means that by default they expect alloc/realloc to never fail.
+	To have some sort of check for NULL, provide own alloc/realloc functions, that have a check for it.
 */
+
+#define BufLibVersion (2)	/* each update to lib should raise a version */
+
