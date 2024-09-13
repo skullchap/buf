@@ -58,8 +58,7 @@ void	setbuflen(Buf *b, ulong len) 	{b->len = len;}
 void
 setbufcap(Buf *b, ulong cap)
 {
-	void *p = reallocfn(b->mem, cap);
-	b->mem = p;
+	b->mem = reallocfn(b->mem, cap);
 	b->cap = cap;
 }
 void	setbufalloc(AllocFunc afn)	{alloc=afn;}
@@ -140,19 +139,38 @@ fillbuf(Buf *b, int c, ulong from, ulong till)
 	memset(b->mem + from, c, n);
 }
 
+static 
+ulong
+next_power_of_two(ulong v)
+{
+    if (v == 0) return 1;
+    v--;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    #if ULONG_MAX > 0xFFFFFFFF
+    v |= v >> 32;
+    #endif
+    return v + 1;
+}
+
 static
 ulong
 bufneedsgrow(Buf *b, ulong n)		/* returns new cap size if buf needs it */
 {
-	ulong cap, leftover;
+	ulong cap = b->cap;
+	ulong leftover = b->len + n;
 
-	leftover = b->len + n;
-	cap = b->cap;
-	while (cap < leftover)
-		cap *= 2;
-
-	if (cap == b->cap)
+	if (leftover <= cap)
 		return 0;
 
-	return cap;
+ 	return next_power_of_two(leftover);
+ 
+/* 	if (cap == 0)
+		cap = 1;
+	while (cap < leftover)
+		cap *= 2;
+	return cap; */
 }
