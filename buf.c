@@ -5,6 +5,7 @@
 */
 
 #include "buf.h"
+#include <limits.h>
 
 typedef unsigned char uchar;
 
