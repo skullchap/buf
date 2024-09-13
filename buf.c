@@ -144,17 +144,17 @@ static
 ulong
 next_power_of_two(ulong v)
 {
-    if (v == 0) return 1;
-    v--;
-    v |= v >> 1;
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-    #if ULONG_MAX > 0xFFFFFFFF
-    v |= v >> 32;
-    #endif
-    return v + 1;
+	if (v == 0) return 1;
+	v--;
+	v |= v >> 1;
+	v |= v >> 2;
+	v |= v >> 4;
+	v |= v >> 8;
+	v |= v >> 16;
+	#if ULONG_MAX > 0xFFFFFFFF
+	v |= v >> 32;
+	#endif
+	return v + 1;
 }
 
 static

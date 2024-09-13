@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 fn main() {
-    let iterations: usize = 1_000_000_000;
+    let iterations: usize = 100_000_000;
     let mut vec: Vec<usize> = Vec::new();
 
     let start = Instant::now();
